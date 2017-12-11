@@ -32,13 +32,12 @@ export type ConnectionStatus = 0 | 1 | 2;
  * Socket RPC connection interface
  */
 export interface RpcConnection {
-  status: EventEmitter<ConnectionStatus>;
-
   connect: EventEmitter<any>;
   disconnect: EventEmitter<any>;
 
   register(name: string, callback: (params: any) => Observable<any>);
   call(name: string, body: any): Observable<any>;
+  start();
 }
 
 /**
@@ -57,8 +56,7 @@ export function createSocketRpcConnection(url: string): Observable<RpcConnection
       autoConnect: false
     });
 
-    let rpcManager = {
-      status: new EventEmitter(),
+    const rpcManager = {
       connect: new EventEmitter(),
       disconnect: new EventEmitter(),
 
@@ -80,16 +78,18 @@ export function createSocketRpcConnection(url: string): Observable<RpcConnection
 
           index++;
         });
+      },
+      start: () => {
+        client.connect();
       }
     };
 
     client.on('connect', () => {
-      rpcManager.status.emit(0);
-      observable.next(rpcManager);
+      rpcManager.connect.emit();
     });
 
-    client.on('reconnect', () => {
-      rpcManager.status.emit(1);
+    client.on('disconnect', () => {
+      rpcManager.disconnect.emit();
     });
 
     client.on('message', (message: RpcMessage) => {
@@ -97,8 +97,8 @@ export function createSocketRpcConnection(url: string): Observable<RpcConnection
       switch (message.type) {
         case "request": {
           const messageName = message.name;
-          if (this.localRpc.has(messageName)) {
-            this.localRpc.get(messageName)(message.body).subscribe(data => {
+          if (localRpc.has(messageName)) {
+            localRpc.get(messageName)(message.body).subscribe(data => {
               const responseMessage: RpcMessage = {
                 id: message.id,
                 name: messageName,
@@ -120,9 +120,8 @@ export function createSocketRpcConnection(url: string): Observable<RpcConnection
     });
 
     client.on('reconnect_failed', () => {
-      rpcManager.status.emit(2);
     });
 
-    client.connect();
+    observable.next(rpcManager);
   });
 }

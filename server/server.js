@@ -8,16 +8,16 @@ rpc.registerRpc('registerUser', message => {
     const socket = message.socket;
     const userId = message.body.userId;
 
-    if (users.has(userId)) {
-      console.log(`Update user: ${userId}`);
-    } else {
-      console.log(`Register user: ${userId}`);
-    }
-
     users.set(userId, socket);
 
+    rpc.sendRequest(socket, 'inc', {
+      value: 4
+    }).subscribe(result => {
+      console.log(`Inc result:`, result);
+    });
     observable.next({
       message: 'ok'
     });
   });
 });
+

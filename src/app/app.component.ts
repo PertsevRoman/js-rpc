@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {Observable} from "rxjs/Observable";
 import {createSocketRpcConnection} from "./rpc";
+import {Observable} from "rxjs/Observable";
 
 @Component({
   selector: 'app-root',
@@ -14,13 +14,27 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     createSocketRpcConnection('http://localhost:3001').subscribe(connection => {
-      console.log(`User connected`);
-
-      connection.call('registerUser', {
-        userId: 1
-      }).subscribe(() => {
-        console.log(`User successfully registered`);
+      connection.disconnect.subscribe(() => {
+        console.log(`User closed`);
       });
-    })
+
+      connection.register('inc', params => {
+        return Observable.create(observable => {
+          observable.next(params.value + 1);
+        });
+      });
+
+      connection.connect.subscribe(() => {
+        console.log(`User connected`);
+
+        connection.call('registerUser', {
+          userId: 1
+        }).subscribe(data => {
+          console.log(data);
+        });
+      });
+
+      connection.start();
+    });
   }
 }

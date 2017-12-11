@@ -8,7 +8,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "server": "nodemon server.js",
+    "server": "nodemon ./server/server.js",
     "e2e": "ng e2e"
   },
   "private": true,
@@ -24,8 +24,9 @@
     "@angular/router": "^5.0.0",
     "@types/socket.io": "^1.4.31",
     "@types/socket.io-client": "^1.4.32",
+    "big-integer": "^1.6.26",
     "core-js": "^2.4.1",
-    "rxjs": "^5.5.2",
+    "rxjs": "^5.5.5",
     "socket.io": "^2.0.4",
     "zone.js": "^0.8.14"
   },
